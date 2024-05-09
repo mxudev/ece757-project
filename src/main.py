@@ -1,41 +1,12 @@
 import onnx
 from onnx import helper
 from google.protobuf.json_format import MessageToDict
-import onnxruntime
 import math
 
 
 def get_model_summary(onnx_model):
     summary = onnx.helper.printable_graph(onnx_model.graph)
     return summary
-
-
-def get_convolution_and_gemm_nodes(onnx_model):
-    convolution_nodes = []
-    gemm_nodes = []
-    node_outputs = set()
-
-    # Find convolution and Gemm nodes
-    for node in onnx_model.graph.node:
-        if node.op_type == "Conv":
-            convolution_nodes.append(node)
-            for output in node.output:
-                node_outputs.add(output)
-        elif node.op_type == "Gemm":
-            gemm_nodes.append(node)
-            for input in node.input:
-                node_outputs.add(input)
-
-    # Find dependencies
-    dependent_nodes = []
-    for node in onnx_model.graph.node:
-        for input in node.input:
-            if input in node_outputs:
-                dependent_nodes.append(node)
-                for output in node.output:
-                    node_outputs.add(output)
-
-    return convolution_nodes, gemm_nodes, dependent_nodes
 
 def get_input_size(model):
     input_shapes = {}
@@ -50,7 +21,7 @@ def process_layers(model):
     outputs["data"] = weight_shapes["data"][1:] #C, H, W
     # print(outputs)
     for node in model.graph.node:
-        print(node)
+        # print(node)
         if node.op_type == "BatchNormalization":
             x = node.input[0]
             if x in outputs:
@@ -88,13 +59,12 @@ def process_layers(model):
             if a in outputs:
                 outputs[c] = outputs[a]
                 continue
-            if b in outputs:
+            if b in outputs: #never actually called
                 outputs[c] = outputs[b]
                 continue
         else:
             break
-    print(outputs)
-
+    return outputs
 
 
 
@@ -102,7 +72,8 @@ def process_layers(model):
 def main():
     model_path = "../models/resnet50-v2-7.onnx"
     model = onnx.load(model_path)
-    process_layers(model)
+    outputs = process_layers(model)
+
 
 
 if __name__ == "__main__":
