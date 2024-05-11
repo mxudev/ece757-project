@@ -4,3 +4,17 @@ Total dynamic write energy per access (nJ): 1.39709
 Total leakage power of a bank (mW): 38878.8
 DRAM
 Data array: Total dynamic read energy/access  (nJ): 1.42181
+
+96M cache:
+Total dynamic read energy per access (nJ): 1.25683
+Total dynamic write energy per access (nJ): 1.28844
+Total leakage power of a bank (mW): 29784.2
+DRAM
+Data array: Total dynamic read energy/access  (nJ): 1.24646
+
+64M cache:
+Total dynamic read energy per access (nJ): 1.01774
+Total dynamic write energy per access (nJ): 0.979389
+Total leakage power of a bank (mW): 19488
+DRAM
+Data array: Total dynamic read energy/access  (nJ): 1.00864

@@ -32,7 +32,8 @@ class SramState:
         K = conv_shape[0] #number of kernel vectors TODO make sure this is right for multiple channels
         F = out_shape[1] * out_shape[2] #number of feature vectors
         k_size = conv_shape[1] * conv_shape[2] * conv_shape[3] * PRECISION #kernel vector size in bytes
-        dram_ld_kernel = math.ceil(F/SA_H) * math.ceil((K * k_size - self.alpha_size) / BUSWIDTH) #TODO added ceiling
+        dram_ld_kernel = K * math.ceil(k_size / BUSWIDTH) + (math.ceil(F/SA_H)-1) * math.ceil((K * k_size - self.alpha_size) / BUSWIDTH) #TODO added ceiling
+
         #SRAM ld / st
         sram_ld_kernel = math.ceil(F/SA_H) * K
         sram_st_from_dram_kernel = dram_ld_kernel #TODO: propose: just keep one term and count all terms when calc the actual energy
@@ -40,7 +41,7 @@ class SramState:
         #-------feature Accesss-------
         ld_seq = conv_sim(in_shape[1], in_shape[2], conv_shape[2], conv_shape[3], conv_stride)
         #SRAM ld
-        sram_ld_feat = np.sum(ld_seq)*math.ceil(in_shape[0]*PRECISION/BUSWIDTH)*math.ceil(K/SA_W) #SRAM load in word manner: in_shape[0]*PRECISION/BUSWIDTH
+        sram_ld_feat = np.sum(ld_seq)*math.ceil(in_shape[0]*PRECISION/BUSWIDTH)*math.ceil(K/SA_W) #SRAM loads a all channels: in_shape[0]*PRECISION/BUSWIDTH
 
         #SRAM st
         sram_st_feat = out_shape[1]*out_shape[2] * math.ceil(out_shape[0]*PRECISION/BUSWIDTH)
