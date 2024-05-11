@@ -13,7 +13,11 @@ class SramState:
         self.beta_size = size * self.beta
         self.f_preload_size = 0
 
-    def operate_conv(self, in_shpae, out_shape, conv_shape):
+    
+    def operate_conv(self, in_shape, out_shape, conv_shape, conv_stride):
+        #in/out shape: C x H x W
+        #conv_shape: C_out x C_in x Kernel_x x Kernel_y
+        #conv_stride: just the stride number
         #-------Kernel Accesss-------
         #DRAM ld
         K = conv_shape[0] #number of kernel vectors
