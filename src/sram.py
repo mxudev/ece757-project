@@ -21,7 +21,7 @@ class SramState:
         dram_ld_kernel = math.ceil(F/SA_H) * math.ceil(K * k_size / BUSWIDTH)
         #SRAM ld / st
         sram_ld_kernel = math.ceil(F/SA_H) * K
-        sram_st_kernel = sram_ld_kernel
+        sram_st_kernel = dram_ld_kernel
 
         #-------Festure Accesss-------
         
