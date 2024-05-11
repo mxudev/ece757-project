@@ -47,7 +47,13 @@ class SramState:
 
         #DRAM ld
         #filling sram part
-        num_chn_slot_filled = math.floor((self.beta_size - self.f_preload_size)/(in_shape[0]*PRECISION))
+        self.f_preload_size = min(self.f_preload_size, in_shape[0]*in_shape[1]*in_shape[2]*PRECISION)
+        num_chn_slot_filled = min(math.floor((self.beta_size - self.f_preload_size)/(in_shape[0]*PRECISION)), 
+                                  math.ceil((in_shape[1]*in_shape[2]*in_shape[0]*PRECISION - self.f_preload_size)/(PRECISION*in_shape[0])))
+        #print(in_shape[1]*in_shape[2]*in_shape[0]*PRECISION, self.f_preload_size)
+
+        assert(num_chn_slot_filled >= 0)
+        #print((in_shape[1]*in_shape[2]*in_shape[0]*PRECISION - self.f_preload_size)//(PRECISION*in_shape[0]))
         dram_ld_feat = math.ceil(in_shape[0]*PRECISION/BUSWIDTH) * num_chn_slot_filled #fill as much unfilled sram as possible
         self.f_preload_size += num_chn_slot_filled * (in_shape[0]*PRECISION)
 
@@ -55,6 +61,7 @@ class SramState:
 
         
         num_chn_slot_rem = in_shape[1]*in_shape[2] - self.f_preload_size//(in_shape[0]*PRECISION) #should be whole number. no ceil needed
+        #print(num_chn_slot_rem)
         # print(self.f_preload_size//(in_shape[0]*PRECISION))
 
         dram_ld_feat += np.sum(ld_seq[:num_chn_slot_rem]) * math.ceil(in_shape[0]*PRECISION/BUSWIDTH) * math.ceil(K/SA_W)
@@ -62,9 +69,10 @@ class SramState:
 
         #DRAM ST
         #update content for next iter
-        self.f_preload_size = math.floor((self.beta_size - self.f_preload_size)/(out_shape[0]*PRECISION))*(out_shape[0]*PRECISION)
-        dram_st_feat = (out_shape[1]*out_shape[2] - self.f_preload_size/(out_shape[0]*PRECISION)) * math.ceil(out_shape[0]*PRECISION/BUSWIDTH)
-        
+        assert(self.beta_size >= self.f_preload_size)
+        self.f_preload_size = min(math.floor((self.beta_size - self.f_preload_size)/(out_shape[0]*PRECISION))*(out_shape[0]*PRECISION), out_shape[0]*out_shape[1]*out_shape[2]*PRECISION)
+        dram_st_feat = (out_shape[1]*out_shape[2]*(out_shape[0]*PRECISION) - self.f_preload_size)/(out_shape[0]*PRECISION) * math.ceil(out_shape[0]*PRECISION/BUSWIDTH)
+        #print(self.f_preload_size, out_shape[1]*out_shape[2]*(out_shape[0]*PRECISION))
         return sram_ld_kernel, sram_ld_feat, sram_st_feat, dram_ld_kernel, dram_ld_feat, dram_st_feat
         
 

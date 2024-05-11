@@ -73,7 +73,7 @@ def run_sim():
     model = onnx.load(model_path)
     outputs = process_layers(model)
     weight_shapes = get_input_size(model)
-    state = sram.SramState(32 * 1024 * 1024, 0.5)
+    state = sram.SramState(1 * 1024, 0.5)
     for node in model.graph.node:
         if node.op_type == "Conv":
             pattern = r"resnetv24_.+_conv3_fwd"
