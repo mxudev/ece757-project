@@ -2,7 +2,8 @@ import onnx
 from onnx import helper
 from google.protobuf.json_format import MessageToDict
 import math
-
+import sram
+import re
 
 def get_model_summary(onnx_model):
     summary = onnx.helper.printable_graph(onnx_model.graph)
@@ -67,12 +68,27 @@ def process_layers(model):
     return outputs
 
 
-
-
-def main():
+def run_sim():
     model_path = "../models/resnet50-v2-7.onnx"
     model = onnx.load(model_path)
     outputs = process_layers(model)
+    weight_shapes = get_input_size(model)
+    state = sram.SramState(32 * 1024 * 1024, 0.5)
+    for node in model.graph.node:
+        if node.op_type == "Conv":
+            pattern = r"resnetv24_.+_conv3_fwd"
+            if (re.match(pattern, node.name)):
+                continue
+            in_shape = outputs[node.input[0]]
+            out_shape = outputs[node.output[0]]
+            conv_shape = weight_shapes[node.input[1]]
+            conv_stride = node.attribute[4].ints[0]
+            sram_ld_kernel, sram_ld_feat, sram_st_feat, dram_ld_kernel, dram_ld_feat, dram_st_feat = state.operate_conv(in_shape, out_shape, conv_shape, conv_stride)
+            print(sram_ld_kernel, sram_ld_feat, sram_st_feat, dram_ld_kernel, dram_ld_feat, dram_st_feat)
+
+def main():
+    run_sim()
+
 
 
 
