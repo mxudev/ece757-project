@@ -51,7 +51,7 @@ class SramState:
         dram_ld_feat = math.ceil(in_shape[0]*PRECISION/BUSWIDTH) * num_chn_slot_filled #fill as much unfilled sram as possible
         self.f_preload_size += num_chn_slot_filled * (in_shape[0]*PRECISION)
 
-        assert(self.f_preload_size < self.beta_size)
+        assert(self.f_preload_size <= self.beta_size)
 
         
         num_chn_slot_rem = in_shape[1]*in_shape[2] - self.f_preload_size//(in_shape[0]*PRECISION) #should be whole number. no ceil needed

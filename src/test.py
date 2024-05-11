@@ -1,5 +1,5 @@
 import sram
-ss = sram.SramState(16, 0.4)
+ss = sram.SramState(16, 0.5)
 
 ans = ss.operate_conv((1,3,3), (1,2,2), (1,1,2,2), 1)
 
