@@ -5,6 +5,10 @@ import math
 import sram
 import re
 
+cache_cap = [2048, 1048576, 2097152, 3145728, 4194304]
+sram_read = [0.00757572, 0.114846, 0.179646, 0.218159, 0.253573]
+sram_write = [0.00849597, 0.121253, 0.185333, 0.22447, 0.261366]
+
 def get_model_summary(onnx_model):
     summary = onnx.helper.printable_graph(onnx_model.graph)
     return summary
