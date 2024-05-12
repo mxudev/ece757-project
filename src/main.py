@@ -3,13 +3,14 @@ from onnx import helper
 from google.protobuf.json_format import MessageToDict
 import math
 import sram
-import power_info
+from power_info import *
 import re
 import numpy as np
+import csv
 
-cache_cap = [2048, 1048576, 2097152, 3145728, 4194304]
-sram_read = [0.00757572, 0.114846, 0.179646, 0.218159, 0.253573]
-sram_write = [0.00849597, 0.121253, 0.185333, 0.22447, 0.261366]
+# cache_cap = [2048, 1048576, 2097152, 3145728, 4194304]
+# sram_read = [0.00757572, 0.114846, 0.179646, 0.218159, 0.253573]
+# sram_write = [0.00849597, 0.121253, 0.185333, 0.22447, 0.261366]
 
 def get_model_summary(onnx_model):
     summary = onnx.helper.printable_graph(onnx_model.graph)
@@ -74,12 +75,9 @@ def process_layers(model):
     return outputs
 
 
-def run_sim(config):
-    model_path = "../models/resnet50-v2-7.onnx"
-    model = onnx.load(model_path)
-    outputs = process_layers(model)
-    weight_shapes = get_input_size(model)
-    state = sram.SramState(cache_cap[config], 0.5)
+def run_sim(config, model, outputs, weight_shapes):
+    
+    state = sram.SramState(sram_size[config], 0.5)
     tot_sram_ld_kernel = 0
     tot_sram_ld_feat = 0
     tot_sram_st_feat = 0
@@ -110,10 +108,25 @@ def run_sim(config):
     tot_energy = tot_sram_ld * sram_read[config] + tot_sram_st * sram_write[config] + tot_dram_ld + tot_dram_st
     return tot_energy
 
+def csv_print(file_name, value1, value2):
+    # Open the file in append mode
+    with open(file_name, mode='a', newline='') as file:
+        writer = csv.writer(file)
+        # Write the two values as one row in the CSV
+        writer.writerow([value1, value2])
+
 def main():
+    model_path = "../models/resnet50-v2-7.onnx"
+    model = onnx.load(model_path)
+    outputs = process_layers(model)
+    weight_shapes = get_input_size(model)
     energy = []
-    for config in range (0, 5):
-        energy.append(run_sim(config))
+    # print(len(sram_size))
+    for config in range (0, len(sram_size)):
+        en = run_sim(config, model, outputs, weight_shapes)
+        print(en)
+        csv_print("out.csv", sram_size[config], en)
+        energy.append(en)
     print(np.array(energy)/1000)
 
 
