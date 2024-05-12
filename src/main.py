@@ -73,7 +73,13 @@ def run_sim():
     model = onnx.load(model_path)
     outputs = process_layers(model)
     weight_shapes = get_input_size(model)
-    state = sram.SramState(1 * 1024, 0.5)
+    state = sram.SramState(2 * 1024, 0.5)
+    tot_sram_ld_kernel = 0
+    tot_sram_ld_feat = 0
+    tot_sram_st_feat = 0
+    tot_dram_ld_kernel = 0
+    tot_dram_ld_feat = 0
+    tot_dram_st_feat = 0
     for node in model.graph.node:
         if node.op_type == "Conv":
             pattern = r"resnetv24_.+_conv3_fwd"
@@ -84,7 +90,17 @@ def run_sim():
             conv_shape = weight_shapes[node.input[1]]
             conv_stride = node.attribute[4].ints[0]
             sram_ld_kernel, sram_ld_feat, sram_st_feat, dram_ld_kernel, dram_ld_feat, dram_st_feat = state.operate_conv(in_shape, out_shape, conv_shape, conv_stride)
-            print(sram_ld_kernel, sram_ld_feat, sram_st_feat, dram_ld_kernel, dram_ld_feat, dram_st_feat)
+            tot_sram_ld_kernel += sram_ld_kernel
+            tot_sram_ld_feat += sram_ld_feat
+            tot_sram_st_feat += sram_st_feat
+            tot_dram_ld_kernel += dram_ld_kernel
+            tot_dram_ld_feat += dram_ld_feat
+            tot_dram_st_feat += dram_st_feat
+    tot_dram_ld = tot_dram_ld_kernel + tot_dram_ld_feat
+    tot_dram_st = tot_sram_st_feat
+    tot_sram_ld = tot_sram_ld_kernel + tot_sram_ld_feat
+    tot_sram_st = tot_sram_st_feat
+    
 
 def main():
     run_sim()
