@@ -3,6 +3,7 @@ from onnx import helper
 from google.protobuf.json_format import MessageToDict
 import math
 import sram
+import power_info
 import re
 
 cache_cap = [2048, 1048576, 2097152, 3145728, 4194304]
