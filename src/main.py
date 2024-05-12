@@ -4,6 +4,7 @@ from google.protobuf.json_format import MessageToDict
 import math
 import sram
 import re
+import numpy as np
 
 cache_cap = [2048, 1048576, 2097152, 3145728, 4194304]
 sram_read = [0.00757572, 0.114846, 0.179646, 0.218159, 0.253573]
@@ -72,12 +73,12 @@ def process_layers(model):
     return outputs
 
 
-def run_sim():
+def run_sim(config):
     model_path = "../models/resnet50-v2-7.onnx"
     model = onnx.load(model_path)
     outputs = process_layers(model)
     weight_shapes = get_input_size(model)
-    state = sram.SramState(2 * 1024, 0.5)
+    state = sram.SramState(cache_cap[config], 0.5)
     tot_sram_ld_kernel = 0
     tot_sram_ld_feat = 0
     tot_sram_st_feat = 0
@@ -102,16 +103,17 @@ def run_sim():
             tot_dram_st_feat += dram_st_feat
     tot_dram_ld = tot_dram_ld_kernel + tot_dram_ld_feat
     tot_dram_st = tot_sram_st_feat
-    tot_sram_ld = tot_sram_ld_kernel + tot_sram_ld_feat
-    tot_sram_st = tot_sram_st_feat
+    tot_sram_ld = tot_sram_ld_kernel + tot_sram_ld_feat + tot_dram_st
+    tot_sram_st = tot_sram_st_feat + tot_dram_ld
 
-def calc_total_energy(tot_dram_ld, tot_dram_st, tot_sram_ld, tot_sram_st, sram_ld):
-    return 0
+    tot_energy = tot_sram_ld * sram_read[config] + tot_sram_st * sram_write[config] + tot_dram_ld + tot_dram_st
+    return tot_energy
 
 def main():
-    run_sim()
-
-
+    energy = []
+    for config in range (0, 5):
+        energy.append(run_sim(config))
+    print(np.array(energy)/1000)
 
 
 if __name__ == "__main__":
