@@ -100,7 +100,9 @@ def run_sim():
     tot_dram_st = tot_sram_st_feat
     tot_sram_ld = tot_sram_ld_kernel + tot_sram_ld_feat
     tot_sram_st = tot_sram_st_feat
-    
+
+def calc_total_energy(tot_dram_ld, tot_dram_st, tot_sram_ld, tot_sram_st, sram_ld):
+    return 0
 
 def main():
     run_sim()
