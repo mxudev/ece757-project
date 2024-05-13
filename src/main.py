@@ -106,14 +106,15 @@ def run_sim(config, model, outputs, weight_shapes):
     tot_sram_st = tot_sram_st_feat + tot_dram_ld
 
     tot_energy = tot_sram_ld * sram_read[config] + tot_sram_st * sram_write[config] + tot_dram_ld + tot_dram_st
-    return tot_energy
-
-def csv_print(file_name, value1, value2):
+    tot_dram_acc = tot_dram_ld + tot_dram_st
+    return (tot_energy, tot_dram_acc)
+def csv_print(file_name, value1, value2, value3):
     # Open the file in append mode
     with open(file_name, mode='a', newline='') as file:
         writer = csv.writer(file)
+        writer.writerow(["byte", "nJ", "dram_acc"])
         # Write the two values as one row in the CSV
-        writer.writerow([value1, value2])
+        writer.writerow([value1, value2, value3])
 
 def main():
     model_path = "../models/resnet50-v2-7.onnx"
@@ -122,12 +123,15 @@ def main():
     weight_shapes = get_input_size(model)
     energy = []
     # print(len(sram_size))
-    for config in range (0, len(sram_size)):
-        en = run_sim(config, model, outputs, weight_shapes)
-        print(en)
-        csv_print("out.csv", sram_size[config], en)
-        energy.append(en)
-    print(np.array(energy)/1000)
+    with open("out.csv", mode="w", newline='') as file:
+        writer = csv.writer(file)
+        writer.writerow(["byte", "nJ", "dram_acc"])
+        for config in range (0, len(sram_size)):
+            en, tot_dram_acc = run_sim(config, model, outputs, weight_shapes)
+            print(en)
+            writer.writerow([sram_size[config], en, tot_dram_acc])
+            energy.append(en)
+        print(np.array(energy)/1000)
 
 
 if __name__ == "__main__":
